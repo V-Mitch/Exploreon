@@ -13,14 +13,15 @@ format_data_for_display <- function(metrics_data, original_data = NULL) {
   # Transpose the data frame
   transposed_summary_stats <- as.data.frame(t(summary_stats))
   # Make the variable names a column instead of rownames
+  # absence of original data, then no need for header
   if(is.null(original_data)){
     transposed_summary_stats <- cbind(. = rownames(transposed_summary_stats), transposed_summary_stats)
     colnames(transposed_summary_stats) <- transposed_summary_stats[1,]
     transposed_summary_stats <- transposed_summary_stats[-1,]
+  # header case
   }else{
     transposed_summary_stats <- cbind(. = rownames(transposed_summary_stats), transposed_summary_stats)
   }
-  
   rownames(transposed_summary_stats) <- NULL
   return(transposed_summary_stats)
 }
@@ -100,14 +101,16 @@ Exploreon <- R6Class(
   public = list(
     # Instance variable to store the data
     data = NULL,
+    data_name = NULL,
     # Constructor
     initialize = function(data) {
       if (!is.data.frame(data)) stop("Input must be a data frame.")
       self$data <- data
+      self$data_name <- deparse(substitute(data))
     },
     get_data_stats = function(round_digits = 2) {
       # Styled header
-      cli::cli_h1(cli::col_blue("{.bold Data Topview}"))
+      cli::cli_h1(cli::col_blue("{.bold Data Topview (L0) for {self$data_name}}"))
       
       # Generate and print the summary statistics without altering structure
       summary_stats <- private$generate_data_stats(self$data, round_digits)
@@ -118,7 +121,7 @@ Exploreon <- R6Class(
     # Method for summary statistics
     get_summary_stats = function(round_digits = 2) {
       # Styled header
-      cli::cli_h1(cli::col_green("{.bold Basic Summary}"))
+      cli::cli_h1(cli::col_green("{.bold Basic Summary (L1) for {self$data_name}}"))
       
       # Generate and print the summary statistics without altering structure
       summary_stats <- private$generate_summary_stats(self$data, round_digits)
