@@ -1,42 +1,19 @@
 library(R6)
 library(cli)
 library(data.table)
+library(fitdistrplus)
 source("display_paginated.R")
 source("format_data_for_display.R")
+source("L0_functions.R")
+source("L2_functions.R")
 
 Exploreon <- R6Class(
   "Exploreon",
   
   private = list(
     
-    generate_data_stats = function(data, round_digits = 2) {
+    generate_L0_stats = function(data, round_digits = 2) {
       
-      get_dynamic_memory_size <- function(data) {
-        size_in_bytes <- as.numeric(object.size(data))
-        
-        if (size_in_bytes < 1024) {
-          return(paste(size_in_bytes, "Bytes"))
-        } else if (size_in_bytes < 1024^2) {
-          size_in_kb <- size_in_bytes / 1024
-          return(paste(round(size_in_kb, 2), "KB"))
-        } else if (size_in_bytes < 1024^3) {
-          size_in_mb <- size_in_bytes / (1024^2)
-          return(paste(round(size_in_mb, 2), "MB"))
-        } else {
-          size_in_gb <- size_in_bytes / (1024^3)
-          return(paste(round(size_in_gb, 2), "GB"))
-        }
-      }  
-      get_dimensions <- function(data) {
-        dims <- dim(data)
-        # Handle cases where dim() is NULL (e.g., for vectors)
-        if (is.null(dims)) {
-          return(paste0("Length: ", length(data)))
-        }
-        # Dynamically build dimension labels
-        labels <- paste(dims, collapse = ", ")
-        return(labels)
-      }
       data_stats <- list(
         Formats = class(data),
         Dimensions = get_dimensions(data),
@@ -45,7 +22,7 @@ Exploreon <- R6Class(
       return(format_data_for_display(data_stats))
     },
     
-    generate_summary_stats = function(data, round_digits = 2) {
+    generate_L1_stats = function(data, round_digits = 2) {
       if (!is.data.frame(data)) stop("Input must be a data frame.")
       
       # Helper function: Check numeric and round
@@ -78,7 +55,16 @@ Exploreon <- R6Class(
       
       return(format_data_for_display(metrics, data))
       
-    }
+    },
+    
+    generate_L2_stats = function(data, round_digits = 2) {
+      if (!is.data.frame(data)) stop("Input must be a data frame.")
+      
+      metrics <- list(
+        Type.Internal = sapply(data, typeof),
+      )
+      return(format_data_for_display(data_stats))
+    },
     
   ),
   
@@ -97,7 +83,7 @@ Exploreon <- R6Class(
       cli::cli_h1(cli::col_blue("{.bold Data Topview (L0) for {self$data_name}}"))
       
       # Generate and print the summary statistics without altering structure
-      summary_stats <- private$generate_data_stats(self$data, round_digits)
+      summary_stats <- private$generate_L0_stats(self$data, round_digits)
       print((summary_stats), row.names = FALSE)
       
       return(invisible(summary_stats))
@@ -107,7 +93,7 @@ Exploreon <- R6Class(
       # Styled header
       cli::cli_h1(cli::col_green("{.bold Basic Summary (L1) for {self$data_name}}"))
       # Generate and print the summary statistics without altering structure
-      summary_stats <- private$generate_summary_stats(self$data, round_digits)
+      summary_stats <- private$generate_L1_stats(self$data, round_digits)
       
       # Display the summary statistics with pagination
       display_paginated(
