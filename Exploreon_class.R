@@ -1,30 +1,8 @@
 library(R6)
 library(cli)
 library(data.table)
-
-format_data_for_display <- function(metrics_data, original_data = NULL) {
-  # Convert the list to a long-format data.frame  
-  summary_stats <- as.data.frame(metrics_data)
-  if(is.null(original_data)){
-    rownames(summary_stats) <- colnames(metrics_data) 
-  }else{
-    rownames(summary_stats) <- colnames(original_data)  # Set variable names as rownames
-  }
-  # Transpose the data frame
-  transposed_summary_stats <- as.data.frame(t(summary_stats))
-  # Make the variable names a column instead of rownames
-  # absence of original data, then no need for header
-  if(is.null(original_data)){
-    transposed_summary_stats <- cbind(. = rownames(transposed_summary_stats), transposed_summary_stats)
-    colnames(transposed_summary_stats) <- transposed_summary_stats[1,]
-    transposed_summary_stats <- transposed_summary_stats[-1,]
-  # header case
-  }else{
-    transposed_summary_stats <- cbind(. = rownames(transposed_summary_stats), transposed_summary_stats)
-  }
-  rownames(transposed_summary_stats) <- NULL
-  return(transposed_summary_stats)
-}
+source("display_paginated.R")
+source("format_data_for_display.R")
 
 Exploreon <- R6Class(
   "Exploreon",
@@ -79,7 +57,8 @@ Exploreon <- R6Class(
         Type.Internal = sapply(data, typeof),
         Type.R = sapply(data, class),
         Min = sapply(data, function(x) if (is.numeric(x)) round_numeric(min(x, na.rm = TRUE)) else NA),
-        Max = sapply(data, function(x) if (is.numeric(x)) round_numeric(max(x, na.rm = TRUE)) else NA),
+        Q1 = sapply(data, function(x) if (is.numeric(x)) round_numeric(
+          quantile(x, probs = 0.25, na.rm = TRUE)) else NA),
         Mean = sapply(data, function(x) if (is.numeric(x)) round_numeric(mean(x, na.rm = TRUE)) else NA),
         Median = sapply(data, function(x) if (is.numeric(x)) round_numeric(median(x, na.rm = TRUE)) else NA),
         Mode = sapply(data, function(x) {
@@ -87,9 +66,14 @@ Exploreon <- R6Class(
           mode_value <- ux[which.max(tabulate(match(x, ux)))]
           round_numeric(mode_value)
         }),
+        Q3 = sapply(data, function(x) if (is.numeric(x)) round_numeric(
+          quantile(x, probs = 0.25, na.rm = TRUE)) else NA),
+        Max = sapply(data, function(x) if (is.numeric(x)) round_numeric(max(x, na.rm = TRUE)) else NA),
         Std.Dev = sapply(data, function(x) if (is.numeric(x)) round_numeric(sd(x, na.rm = TRUE)) else NA),
         Unique.Pct = paste0(sapply(data, function(x) round_numeric(length(unique(x)) / length(x) * 100)),"%"),
-        NA.Pct = paste0(sapply(data, function(x) round_numeric(sum(is.na(x)) / length(x) * 100)),"%")
+        Unique.Count = paste0(sapply(data, function(x) round_numeric(length(unique(x))))),
+        NA.Pct = paste0(sapply(data, function(x) round_numeric(sum(is.na(x)) / length(x) * 100)),"%"),
+        NA.Count = paste0(sapply(data, function(x) round_numeric(sum(is.na(x)))))
       )
       
       return(format_data_for_display(metrics, data))
@@ -119,13 +103,22 @@ Exploreon <- R6Class(
       return(invisible(summary_stats))
     },
     # Method for summary statistics
-    get_summary_stats = function(round_digits = 2) {
+    get_summary_stats = function(round_digits = 2, columns_per_page = 10) {
       # Styled header
       cli::cli_h1(cli::col_green("{.bold Basic Summary (L1) for {self$data_name}}"))
-      
       # Generate and print the summary statistics without altering structure
       summary_stats <- private$generate_summary_stats(self$data, round_digits)
-      print((summary_stats), row.names = FALSE)
+      
+      # Display the summary statistics with pagination
+      display_paginated(
+        summary_stats, 
+        columns_per_page = columns_per_page, 
+        title_fn = function(page, num_pages) {
+          cli::cli_h2(cli::col_blue("Page {page}/{num_pages}"))
+        }
+      )
+      
+      # print((summary_stats), row.names = FALSE)
       
       return(invisible(summary_stats))
     }
