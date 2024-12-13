@@ -2,11 +2,11 @@ library(R6)
 library(cli)
 library(data.table)
 library(fitdistrplus)
-library(silvermantest)
+library(diptest)
 source("display_paginated.R")
 source("format_data_for_display.R")
 source("L0_functions.R")
-source("L2_functions.R")
+# source("L2_functions.R")
 
 Exploreon <- R6Class(
   "Exploreon",
@@ -56,16 +56,27 @@ Exploreon <- R6Class(
       
       return(format_data_for_display(metrics, data))
       
-    },
+    }
     
-    generate_L2_stats = function(data, round_digits = 2) {
-      if (!is.data.frame(data)) stop("Input must be a data frame.")
-      
-      metrics <- list(
-        Type.Internal = sapply(data, typeof),
-      )
-      return(format_data_for_display(data_stats))
-    },
+    # generate_L2_stats = function(data, round_digits = 2) {
+    #   if (!is.data.frame(data)) stop("Input must be a data frame.")
+    #   
+    #   L2_result_per_column <- list()
+    #   
+    #   for (c in 1:ncol(data)){
+    #     suppressMessages({  
+    #       dist_table <- create_dist_table(data[,c])
+    #       mini_histogram <- generate_vertical_mini_histogram(data[,c])
+    #       
+    #       L2_result_per_column <- append(L2_result_per_column, list(dist_table, mini_histogram))
+    #     })
+    #   }
+    #   
+    #   metrics <- list(
+    #     Type.Internal = sapply(data, typeof),
+    #   )
+    #   return(list(dist_table, mini_histogram))
+    # },
     
   ),
   
@@ -79,7 +90,7 @@ Exploreon <- R6Class(
       self$data <- data
       self$data_name <- deparse(substitute(data))
     },
-    get_data_stats = function(round_digits = 2) {
+    get_L0_stats = function(round_digits = 2) {
       # Styled header
       cli::cli_h1(cli::col_blue("{.bold Data Topview (L0) for {self$data_name}}"))
       
@@ -90,7 +101,7 @@ Exploreon <- R6Class(
       return(invisible(summary_stats))
     },
     # Method for summary statistics
-    get_summary_stats = function(round_digits = 2, columns_per_page = 10) {
+    get_L1_stats = function(round_digits = 2, columns_per_page = 10) {
       # Styled header
       cli::cli_h1(cli::col_green("{.bold Basic Summary (L1) for {self$data_name}}"))
       # Generate and print the summary statistics without altering structure
@@ -109,6 +120,12 @@ Exploreon <- R6Class(
       
       return(invisible(summary_stats))
     }
+    
+    # get_L2_stats = function(round_digits = 2){
+    #   
+    #   combine_table_and_histogram(dist_table, mini_histogram)
+    #   
+    # }
     
   )
 )

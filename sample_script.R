@@ -9,8 +9,8 @@ data <- read.csv(file_path)
 # Exploreon$class_methods$get_summary_stats(data)
 
 explore <- Exploreon$new(data)
-explore$get_data_stats()
-explore$get_summary_stats()
+explore$get_L0_stats()
+explore$get_L1_stats()
 
 
 Exploreon$new(data)$get_summary_stats()
