@@ -56,7 +56,7 @@ Exploreon <- R6Class(
       
       return(format_data_for_display(metrics, data))
       
-    }
+    },
     
     generate_L2_stats = function(data, round_digits = 2) {
       if (!is.data.frame(data)) stop("Input must be a data frame.")
@@ -68,13 +68,14 @@ Exploreon <- R6Class(
           suppressWarnings({
             dist_table <- create_dist_table(data[,c])
             mini_histogram <- generate_vertical_mini_histogram(data[,c])
-            L2_result_per_column <- append(L2_result_per_column, list(dist_table, mini_histogram))
+            temp_column_list <- list(dist_table, mini_histogram)
+            L2_result_per_column <- append(L2_result_per_column, list(temp_column_list))
           })
         })
       }
       
       return(L2_result_per_column)
-    },
+    }
     
   ),
   
@@ -99,7 +100,7 @@ Exploreon <- R6Class(
       return(invisible(summary_stats))
     },
     # Method for summary statistics
-    get_L1_stats = function(round_digits = 2, columns_per_page = 10) {
+    get_L1_stats = function(round_digits = 2, columns_per_page = 8) {
       # Styled header
       cli::cli_h1(cli::col_green("{.bold Basic Summary (L1) for {self$data_name}}"))
       # Generate and print the summary statistics without altering structure
@@ -117,13 +118,19 @@ Exploreon <- R6Class(
       # print((summary_stats), row.names = FALSE)
       
       return(invisible(summary_stats))
-    }
+    },
     
-    # get_L2_stats = function(round_digits = 2){
-    #   
-    #   combine_table_and_histogram(dist_table, mini_histogram)
-    #   
-    # }
+    get_L2_stats = function(round_digits = 2){
+      
+      cli::cli_h1(cli::col_silver("{.bold Distribution Summary (L2) for {self$data_name}}"))
+      
+      dist_data <- private$generate_L2_stats(self$data, round_digits)
+      
+      for (col in 1:length(L2_result_per_column)){
+        invisible(combine_table_and_histogram(L2_result_per_column[[col]][[1]], 
+                                              L2_result_per_column[[col]][[2]]))
+      }
+    }
     
   )
 )

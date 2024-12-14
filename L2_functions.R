@@ -38,29 +38,31 @@ create_dist_table <- function(data){
     
     for (dist in distributions) {
       message(sprintf("Fitting %s distribution...", dist))
-      
-      tryCatch({
-        if (dist == "beta") {
-          # Check if data needs rescaling for beta distribution
-          if (min(data) < 0 || max(data) > 1) {
-            message("Rescaling data to [0, 1] for beta distribution.")
-            data_rescaled <- (data - min(data)) / (max(data) - min(data))
-            fits[[dist]] <- fitdist(data_rescaled, dist, 
-                                    start = list(shape1 = 1, shape2 = 1), 
-                                    control = list(maxit = 1000))
+      capture.output(
+        
+        tryCatch({
+          if (dist == "beta") {
+            # Check if data needs rescaling for beta distribution
+            if (min(data) < 0 || max(data) > 1) {
+              message("Rescaling data to [0, 1] for beta distribution.")
+              data_rescaled <- (data - min(data)) / (max(data) - min(data))
+              fits[[dist]] <- fitdist(data_rescaled, dist, 
+                                      start = list(shape1 = 1, shape2 = 1), 
+                                      control = list(maxit = 1000))
+            } else {
+              fits[[dist]] <- fitdist(data, dist)
+            }
+          } else if (dist == "t" | dist == "f" | dist == "chisq") {
+            # Provide starting value for degrees of freedom (df) for t-distribution
+            fits[[dist]] <- fitdist(data, dist, start = list(df = 10))
           } else {
+            # Fit other distributions with original data
             fits[[dist]] <- fitdist(data, dist)
           }
-        } else if (dist == "t" | dist == "f" | dist == "chisq") {
-          # Provide starting value for degrees of freedom (df) for t-distribution
-          fits[[dist]] <- fitdist(data, dist, start = list(df = 10))
-        } else {
-          # Fit other distributions with original data
-          fits[[dist]] <- fitdist(data, dist)
-        }
-      }, error = function(e) {
-        message(sprintf("Failed to fit %s: %s", dist, e$message))
-      })
+        }, error = function(e) {
+          message(sprintf("Failed to fit %s: %s", dist, e$message))
+        })
+      )
     }
     
     return(fits)
@@ -177,7 +179,7 @@ generate_vertical_mini_histogram <- function(data, bins = 10, max_height = 7, sy
 }
 
 
-combine_table_and_histogram <- function(table, histogram) {
+combine_table_and_histogram <- function(table, histogram, colname) {
   # Convert the table to printable character rows with proper spacing
   table_rows <- apply(table, 1, function(row) sprintf("%-10s | %-20s | %-15s", row[1], row[2], row[3]))
   
@@ -185,7 +187,6 @@ combine_table_and_histogram <- function(table, histogram) {
   if (length(histogram) < nrow(table)) {
     histogram <- c(histogram, rep("", nrow(table) - length(histogram)))
   }
-  
   # Combine the table with its corresponding histogram row by row
   combined_output <- mapply(function(table_row, hist_row) {
     paste(table_row, "|", hist_row)
@@ -193,9 +194,9 @@ combine_table_and_histogram <- function(table, histogram) {
        rep(sprintf("%-10s | %-20s | %-15s", "" , "", ""),length(histogram) - length(table_rows))), histogram)
   
   # Prepare the header for the table
-  header <- sprintf("%-10s | %-20s | %-15s | Histogram", "Name", "p_value", "Test.Against.Dist")
+  header <- sprintf("%-10s | %-20s | %-15s | Histogram", "Distribution", "p_value", "Test.Against.Dist")
   separator <- paste(rep("-", nchar(header)), collapse = "")
-  cli::cli_h1(cli::col_green("Combined Table and Histograms"))
+  # cli::cli_h1(cli::blue("{.Column: {self$data_name}}"))
   
   # Print the header and separator
   cat(header, "\n")
@@ -205,17 +206,3 @@ combine_table_and_histogram <- function(table, histogram) {
   cat(combined_output, sep = "\n")
 }
 
-
-
-
-# graphtest <- generate_vertical_mini_histogram(data)
-# 
-# combine_table_and_histogram(tabletest, graphtest)
-# 
-# 
-# graphtest <- generate_vertical_mini_histogram(data)
-# 
-# combine_table_and_histogram(tabletest, graphtest)
-# 
-# 
-# combine_table_and_histogram(tabletest, graphtest)

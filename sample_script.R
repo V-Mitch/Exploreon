@@ -1,4 +1,3 @@
-library(fitdistrplus)
 source('Exploreon_class.R')
 
 file_path <- "C:/Users/victo/OneDrive/Spectre/R tests/VitaminA.csv"
@@ -11,6 +10,7 @@ data <- read.csv(file_path)
 explore <- Exploreon$new(data)
 explore$get_L0_stats()
 explore$get_L1_stats()
+explore$get_L2_stats()
 
 
 Exploreon$new(data)$get_summary_stats()
