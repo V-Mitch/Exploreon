@@ -6,7 +6,7 @@ library(diptest)
 source("display_paginated.R")
 source("format_data_for_display.R")
 source("L0_functions.R")
-# source("L2_functions.R")
+source("L2_functions.R")
 
 Exploreon <- R6Class(
   "Exploreon",
@@ -58,25 +58,23 @@ Exploreon <- R6Class(
       
     }
     
-    # generate_L2_stats = function(data, round_digits = 2) {
-    #   if (!is.data.frame(data)) stop("Input must be a data frame.")
-    #   
-    #   L2_result_per_column <- list()
-    #   
-    #   for (c in 1:ncol(data)){
-    #     suppressMessages({  
-    #       dist_table <- create_dist_table(data[,c])
-    #       mini_histogram <- generate_vertical_mini_histogram(data[,c])
-    #       
-    #       L2_result_per_column <- append(L2_result_per_column, list(dist_table, mini_histogram))
-    #     })
-    #   }
-    #   
-    #   metrics <- list(
-    #     Type.Internal = sapply(data, typeof),
-    #   )
-    #   return(list(dist_table, mini_histogram))
-    # },
+    generate_L2_stats = function(data, round_digits = 2) {
+      if (!is.data.frame(data)) stop("Input must be a data frame.")
+      
+      L2_result_per_column <- list()
+      
+      for (c in 1:ncol(data)){
+        suppressMessages({
+          suppressWarnings({
+            dist_table <- create_dist_table(data[,c])
+            mini_histogram <- generate_vertical_mini_histogram(data[,c])
+            L2_result_per_column <- append(L2_result_per_column, list(dist_table, mini_histogram))
+          })
+        })
+      }
+      
+      return(L2_result_per_column)
+    },
     
   ),
   
