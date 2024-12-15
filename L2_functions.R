@@ -181,7 +181,7 @@ generate_vertical_mini_histogram <- function(data, bins = 10, max_height = 7, sy
 
 combine_table_and_histogram <- function(table, histogram, colname) {
   # Convert the table to printable character rows with proper spacing
-  table_rows <- apply(table, 1, function(row) sprintf("%-10s | %-20s | %-15s", row[1], row[2], row[3]))
+  table_rows <- apply(table, 1, function(row) sprintf("%-13s | %-15s | %-15s", row[1], row[2], row[3]))
   
   # Ensure the histogram has the same length as the table rows
   if (length(histogram) < nrow(table)) {
@@ -194,11 +194,12 @@ combine_table_and_histogram <- function(table, histogram, colname) {
        rep(sprintf("%-10s | %-20s | %-15s", "" , "", ""),length(histogram) - length(table_rows))), histogram)
   
   # Prepare the header for the table
-  header <- sprintf("%-10s | %-20s | %-15s | Histogram", "Distribution", "p_value", "Test.Against.Dist")
+  header <- sprintf("%-13s | %-15s | %-15s | Histogram", "Distribution", "p_value", "Test.Against.Dist")
   separator <- paste(rep("-", nchar(header)), collapse = "")
   # cli::cli_h1(cli::blue("{.Column: {self$data_name}}"))
   
   # Print the header and separator
+  cat(colname, "\n")
   cat(header, "\n")
   cat(separator, "\n")
   

@@ -68,7 +68,8 @@ Exploreon <- R6Class(
           suppressWarnings({
             dist_table <- create_dist_table(data[,c])
             mini_histogram <- generate_vertical_mini_histogram(data[,c])
-            temp_column_list <- list(dist_table, mini_histogram)
+            colname <- colnames(data)[c]
+            temp_column_list <- list(dist_table, mini_histogram, colname)
             L2_result_per_column <- append(L2_result_per_column, list(temp_column_list))
           })
         })
@@ -124,11 +125,12 @@ Exploreon <- R6Class(
       
       cli::cli_h1(cli::col_silver("{.bold Distribution Summary (L2) for {self$data_name}}"))
       
-      dist_data <- private$generate_L2_stats(self$data, round_digits)
+      L2_result_per_column <- private$generate_L2_stats(self$data, round_digits)
       
       for (col in 1:length(L2_result_per_column)){
         invisible(combine_table_and_histogram(L2_result_per_column[[col]][[1]], 
-                                              L2_result_per_column[[col]][[2]]))
+                                              L2_result_per_column[[col]][[2]],
+                                              L2_result_per_column[[col]][[3]]))
       }
     }
     
