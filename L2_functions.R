@@ -34,6 +34,7 @@ create_dist_table <- function(data){
         return(NULL)
       }
     }
+    browser()
     
     
     for (dist in distributions) {
